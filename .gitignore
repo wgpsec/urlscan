@@ -23,9 +23,3 @@ yarn-error.log*
 yarn.lock
 
 /venv
-/Scan/Crawlergo/crawlergo.exe
-/Subdomain/oneforall/results/
-/Subdomain/GeoLite2-ASN.mmdb
-/Subdomain/ipdata.ipdb
-/Subdomain/results/
-/utils/logs/
