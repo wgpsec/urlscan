@@ -1,16 +1,25 @@
-import requests
-import random
-import multiprocessing
-from concurrent import futures
+import csv
 import datetime
 import json
-import csv
+import multiprocessing
+import random
+from concurrent import futures
 from urllib.parse import urlparse
+
+import requests
 from bs4 import BeautifulSoup
-import codecs
+
 from Wappalyzer.Wappalyzer import Wappalyzer, WebPage
+from wafw00f.main import main
+
+# 配置HTTP请求超时时间
+http_time_out = 60
+# 配置线程池
+pool_max_workers = 100
 
 requests.adapters.DEFAULT_RETRIES = 5
+requests.packages.urllib3.disable_warnings()
+
 # 批量跑网站，输出cvs，里面包括域名，url，标题，http状态码，web指纹
 user_agents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -23,8 +32,6 @@ user_agents = [
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) '
     'Gecko/20100101 Firefox/68.0',
     'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/68.0']
-
-http_time_out = 60
 
 
 def gen_fake_header():
@@ -40,7 +47,7 @@ def gen_fake_header():
         'Cache-Control': 'max-age=0',
         'Connection': 'close',
         'DNT': '1',
-        'Referer': 'https://www.google.com/',
+        'Referer': 'https://www.baidu.com/',
         'Upgrade-Insecure-Requests': '1',
         'User-Agent': ua
     }
@@ -48,7 +55,9 @@ def gen_fake_header():
 
 
 def get_title(markup):
-    '''获取网页标题'''
+    """
+    获取网页标题
+    """
     try:
         soup = BeautifulSoup(markup, 'lxml')
     except Exception as e:
@@ -139,9 +148,6 @@ def check_http(sql_ports):
         return response
 
 
-requests.packages.urllib3.disable_warnings()
-
-
 def action(task_url):
     res = check_http(task_url)
     try:
@@ -149,6 +155,7 @@ def action(task_url):
         res_title = ""
         fig = ""
         status_code = ""
+        waf = ""
         if res is None:
             res_url = task_url
         else:
@@ -158,15 +165,20 @@ def action(task_url):
             fig = get_banner(res)
             status_code = res.status_code
             res_title = get_title(markup=res.text)
+            falg, waf = main(task_url)
+            if not falg:
+                waf = ''
 
         if res_title is None:
             res_title = ""
+
         csv_res = {
             '域名': task_domain.netloc,
             'url': res_url,
             '标题': res_title,
             'http状态码': status_code,
-            'web指纹': fig
+            'web指纹': fig,
+            'WAF': waf
         }
         return csv_res
 
@@ -185,31 +197,30 @@ def urlscan_main():
          __/ | |                    
         |___/|_|   
 
-    快速HTTP检测工具 V0.1
+    快速HTTP检测工具 V0.2
     WgpSec Team
     www.wgpsec.org
 
     \033[0m
     """)
-    print("请输入需要检测的txt地址，默认为domain.txt")
+    print("请输入需要检测的txt地址，默认为domain.txt 已存在数据会覆盖追加")
     paths = input("> ")
     if paths == "":
         paths = "domain.txt"
     process_name = multiprocessing.current_process().name
     print("扫描线程启动 " + process_name)
-    # 开个100线程
-    pool = futures.ThreadPoolExecutor(max_workers=100)
+    pool = futures.ThreadPoolExecutor(max_workers=pool_max_workers)
     task_list = []
     with open(paths, "r") as files:
         file_data = files.readlines()  # 读取文件
         for fi_s in file_data:
             fi_s = fi_s.strip('\n')
             task_list.append(fi_s)
-    print(f"小弟读取到{len(task_list)}条网站，现在为大哥启动")
+    print(f"读取到{len(task_list)}条URL，现在开始启动探测，请保持网络畅通")
     wait_for = [pool.submit(action, task_url) for task_url in task_list]
     with open('%s-urlCheck.csv' % datetime.date.today(), 'a', newline='') as csvfile:
         # csvfile.write(codecs.BOM_UTF8)
-        fieldnames = ['域名', 'url', '标题', 'http状态码', 'web指纹']
+        fieldnames = ['域名', 'url', '标题', 'http状态码', 'web指纹', 'WAF']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         # 注意header是个好东西
         writer.writeheader()
