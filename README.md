@@ -2,6 +2,8 @@
 
 环境 python3
 
+本项目为 plat.wgpsec.org 狼组信息化平台部分功能开源项目
+
 使用前 `pip install -r requirements.txt`
 
 使用方法 ： `python scan.py`  根据提示输入域名文件路径
