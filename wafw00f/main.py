@@ -321,7 +321,7 @@ def main(target):
     try:
         rq = attacker.normalRequest()
     except Exception as e:
-        print(f'waf检测：[{target}]访问出错{e}')
+        # print(f'waf检测：[{target}]访问出错{e}')
         return False, None
     if rq is None:
         print(f'waf检测：[{target}]无法访问')

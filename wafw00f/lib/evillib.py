@@ -5,6 +5,7 @@ See the LICENSE file for copying permission.
 '''
 
 import logging
+import random
 import time
 from copy import copy
 
@@ -23,14 +24,30 @@ except ImportError:
 # requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # For requests >= 2.16, this is the convention 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/68.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) '
+    'Gecko/20100101 Firefox/68.0',
+    'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/68.0']
 
+ua = random.choice(user_agents)
 def_headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'DNT': '1',  # Do Not Track request header
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3770.100 Safari/537.36',
-    'Upgrade-Insecure-Requests': '1'  #
+      'Accept': 'text/html,application/xhtml+xml,'
+                  'application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'close',
+        'DNT': '1',
+        'Referer': 'https://www.baidu.com/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': ua
 }
 proxies = {}
 
@@ -67,7 +84,7 @@ class waftoolsengine:
         self.requestnumber = 0
         self.path = path
         self.redirectno = 0
-        self.allowredir = redir
+        self.allowredir = False
         self.proxies = proxies
         self.log = logging.getLogger('wafw00f')
         if head:
@@ -90,4 +107,6 @@ class waftoolsengine:
             self.requestnumber += 1
             return req
         except requests.exceptions.RequestException as e:
-            self.log.error('Something went wrong %s' % (e.__str__()))
+            pass
+            # print("WAF ERROR")
+            # self.log.error('Something went wrong %s' % (e.__str__()))

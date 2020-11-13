@@ -64,7 +64,7 @@ def get_title(markup):
     try:
         soup = BeautifulSoup(markup, 'lxml')
     except Exception as e:
-        print(f"获取标题出错{e}")
+        print(f"【无法获取标题】{e}")
         return None
     title = soup.title
     if title:
@@ -93,17 +93,18 @@ def get_title(markup):
 
 
 def get_banner(response):
-    # try:
-    w = Wappalyzer.latest()
-    webpage = WebPage.new_from_url(response)
-    r = w.analyze(webpage)
-    # banner = str({'Server': headers.get('Server'),
-    #               'Via': headers.get('Via'),
-    #               'X-Powered-By': headers.get('X-Powered-By')})
-    banner = json.dumps(r, sort_keys=True, separators=(',', ':'))
-    # except Exception as e:
-    #     print(e)
-    #     return None
+    banner = None
+    try:
+        w = Wappalyzer.latest()
+        webpage = WebPage.new_from_url(response)
+        r = w.analyze(webpage)
+        # banner = str({'Server': headers.get('Server'),
+        #               'Via': headers.get('Via'),
+        #               'X-Powered-By': headers.get('X-Powered-By')})
+        banner = json.dumps(r, sort_keys=True, separators=(',', ':'))
+    except Exception as e:
+        print("错误【" + e + "】")
+        return None
     # print(banner)
     return banner
 
@@ -111,16 +112,16 @@ def get_banner(response):
 def check_http(sql_ports):
     '''HTTP服务探测'''
     url = f'{sql_ports}'
+    # 随机获取一个Header头
     headers = gen_fake_header()
     try:
         response = requests.get(url, timeout=http_time_out, verify=False, headers=headers)
     except requests.exceptions.Timeout:
-        print(f'{sql_ports} 访问超时')
+        print(f'{sql_ports} 无法访问【访问超时】')
         return None
     except requests.exceptions.SSLError:
         st_sql_ports = urlparse(sql_ports).netloc
         url = f'https://{st_sql_ports}'
-        print(url)
         try:
             response = requests.get(url, timeout=http_time_out, verify=False, headers=headers)
         except Exception as e:
@@ -143,7 +144,7 @@ def check_http(sql_ports):
             else:
                 return response
         except Exception as e:
-            print(e)
+            print("最终还是错误" + e)
             return None
         else:
             return response
@@ -155,6 +156,7 @@ def action(task_url):
     res = check_http(task_url)
     try:
         task_domain = urlparse(task_url)
+        print("【任务URL】"+task_url)
         res_title = ""
         fig = ""
         status_code = ""
@@ -168,8 +170,8 @@ def action(task_url):
             fig = get_banner(res)
             status_code = res.status_code
             res_title = get_title(markup=res.text)
-            falg, waf = main(task_url)
-            if not falg:
+            flag, waf = main(res_url)
+            if not flag:
                 waf = ''
 
         if res_title is None:
@@ -200,13 +202,13 @@ def urlscan_main():
          __/ | |                    
         |___/|_|   
 
-    快速HTTP检测工具 V0.2
+    快速HTTP检测工具 V0.3
     WgpSec Team
     www.wgpsec.org
 
     \033[0m
     """)
-    print("请输入需要检测的txt地址，默认为domain.txt 已存在数据会覆盖追加")
+    print("请输入需要批量检测的txt地址，默认为domain.txt 已存在数据会覆盖追加")
     paths = input("> ")
     if paths == "":
         paths = "domain.txt"
@@ -219,7 +221,7 @@ def urlscan_main():
         for fi_s in file_data:
             fi_s = fi_s.strip('\n')
             task_list.append(fi_s)
-    print(f"读取到{len(task_list)}条URL，现在开始启动探测，请保持网络畅通")
+    print(f"任务读取完毕，识别到 {len(task_list)} 条任务信息，现在开始启动探测，请保持网络畅通")
     wait_for = [pool.submit(action, task_url) for task_url in task_list]
     with open('%s-urlCheck.csv' % datetime.date.today(), 'a', newline='') as csvfile:
         # csvfile.write(codecs.BOM_UTF8)
