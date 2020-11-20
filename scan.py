@@ -1,6 +1,6 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-  
-
+# -*- coding: utf-8 -*-
+import codecs
 import csv
 import datetime
 import json
@@ -130,10 +130,14 @@ def check_http(sql_ports):
             return response
     # 报错判断为没有加HTTP头
     except Exception as e:
+        print("【没有HTTP头，自动添加】"+url)
         # sql_ports = urlparse(sql_ports).netloc
         url = f'http://{sql_ports}'
         try:
             response = requests.get(url, timeout=http_time_out, verify=False, headers=headers)
+        except requests.exceptions.Timeout:
+            print(f'{sql_ports} 无法访问【访问超时】')
+            return None
         # SSL错误，说明要HTTPS访问
         except requests.exceptions.SSLError:
             url = f'https://{sql_ports}'
@@ -144,7 +148,8 @@ def check_http(sql_ports):
             else:
                 return response
         except Exception as e:
-            print("最终还是错误" + e)
+            print("最终还是错误")
+            print(e)
             return None
         else:
             return response
@@ -154,6 +159,7 @@ def check_http(sql_ports):
 
 def action(task_url):
     res = check_http(task_url)
+    print(res)
     try:
         task_domain = urlparse(task_url)
         print("【任务URL】"+task_url)
@@ -185,6 +191,7 @@ def action(task_url):
             'web指纹': fig,
             'WAF': waf
         }
+        print(csv_res)
         return csv_res
 
     except Exception as e:
