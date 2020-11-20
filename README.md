@@ -2,7 +2,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Language-Python3-blue" />
-  <img src="https://img.shields.io/badge/Version-0.2-blue" />
+  <img src="https://img.shields.io/badge/Version-1.0-blue" />
   <img src="https://img.shields.io/badge/Dependence-Wappalyzer+Wafw00f-green" />
 </p>
 
@@ -36,7 +36,8 @@
 
  - **v0.2** [2020-06-23]
    - 支持WAF识别
-
+ - **v1.0** [2020-11-20]
+   - 增加关键词搜索功能
 ## 免责声明
 
 **不能使用该工具进行非法活动，下载该工具就表示同意此条款，造成的一切后果与作者无关！！**
