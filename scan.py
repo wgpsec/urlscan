@@ -23,7 +23,7 @@ requests.packages.urllib3.disable_warnings()
 
 class UrlScan(object):
     def __init__(self):
-        self.version = "1.0"
+        self.version = "1.1"
         self.http_time_out = 60  # 配置HTTP请求超时时间
         self.pool_max_workers = 100  # 配置线程池
         self.url_list = []
@@ -40,6 +40,10 @@ class UrlScan(object):
             self.get_url_list()
             self.url_scan()
         if choice == '2':
+            self.get_dir_list()
+            self.dir_scan()
+            print(self.dir_result)
+        if choice == '3':
             self.get_dir_list()
             self.dir_scan()
             print(self.dir_result)
@@ -73,12 +77,11 @@ class UrlScan(object):
         print("【任务】" + task_keyword)
         baidu_url = "https://www.baidu.com/s?wd=" + str(task_keyword) + "&usm=3&rsv_idx=2&rsv_page=1"
         headers = self.gen_fake_header()
-        response = requests.get(url=baidu_url, headers=headers, verify=False, timeout=30)
-        # print(response.content.decode('utf-8'))
-        re_html = etree.HTML(response.text)
-        edu_url = re_html.xpath('//*[@id="1"]/h3/a[1]/@href')[0]
-        edu_response_url = ""
+        edu_response_url = None
         try:
+            response = requests.get(url=baidu_url, headers=headers, verify=False, timeout=30)
+            re_html = etree.HTML(response.text)
+            edu_url = re_html.xpath('//*[@id="1"]/h3/a[1]/@href')[0]
             edu_response_url = requests.get(url=edu_url, verify=False, headers=headers).url
             print(edu_response_url)
             try:
@@ -153,7 +156,7 @@ class UrlScan(object):
             'Cache-Control': 'max-age=0',
             'Connection': 'close',
             'DNT': '1',
-            'Cookie': 'BIDUPSID=48333435302DD31E40712D70AF6C31E4; PSTM=1605847972; BAIDUID=48333435302DD31EBCC87CBF4B7A51F3:FG=1; BD_HOME=1; H_PS_PSSID=32820_1450_33041_33061_33098_33101_32962_22158; BAIDUID_BFESS=48333435302DD31EBCC87CBF4B7A51F3:FG=1; ORIGIN=2; ISSW=1; ISSW=1; BD_UPN=12314753',
+            'Cookie': 'BIDUPSID=564f939a8f8a5befa67d62bdf79e6fa5; PSTM=1605847972; BAIDUID=d9e45923b4fb84761b608da331c2d66c:FG=1;',
             'Referer': 'https://www.baidu.com/',
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': ua
@@ -249,9 +252,16 @@ class UrlScan(object):
                 else:
                     return response
             except Exception as e:
-                print("最终还是错误")
-                print(e)
-                return None
+                url = f'https://{sql_ports}'
+                try:
+                    response = requests.get(url, timeout=self.http_time_out, verify=False, headers=headers)
+                except Exception as e:
+                    print("最终还是错误")
+                    print(e)
+                    return None
+                else:
+                    return response
+
             else:
                 return response
         else:
